@@ -9,7 +9,7 @@ using System.Text.Json;
 namespace c_ApiLayout.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/UserController")]
     public class apiLayoutController : ControllerBase
     {
         private readonly IMongoCollection<BsonDocument> _UserCollection;
@@ -31,7 +31,7 @@ namespace c_ApiLayout.Controllers
                 string Username = userForm.Username;
                 string Password = userForm.Password;
                 string HashPassword = ShaNextHashing.GenerateSaltedHash(Password);
-                bool Admin = userForm.Admin;
+                bool Admin = false;
 
 
                 var filter = Builders<BsonDocument>.Filter.Eq("username", Username);
@@ -103,7 +103,7 @@ namespace c_ApiLayout.Controllers
             try
             {
                 string Username = userForm.Username;
-                bool Admin = userForm.Admin;
+                bool Admin = true;
 
                 var filter = Builders<BsonDocument>.Filter.Eq("username", Username);
                 var document = await _UserCollection.Find(filter).FirstOrDefaultAsync();
@@ -125,7 +125,7 @@ namespace c_ApiLayout.Controllers
                 }
                 var update = Builders<BsonDocument>.Update
 
-                    .Set("admin", !Admin);
+                    .Set("admin", Admin);
 
                 await _UserCollection.UpdateOneAsync(filter, update);
 
