@@ -14,9 +14,21 @@ namespace c_ApiLayout
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
 
             services.AddHttpClient();
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy("CorsPolicy",
+                    builder =>
+                    {
+                        builder.WithOrigins("http://127.0.0.1:2024")
+                               .AllowAnyHeader()
+                               .AllowAnyMethod();
+                    });
+            });
+            services.AddControllers();
+
 
             services.AddSwaggerGen(c =>
             {
@@ -37,17 +49,16 @@ namespace c_ApiLayout
             {
                 app.UseDeveloperExceptionPage();
             }
-
             app.UseSwagger();
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "C# API Layout"));
 
             app.UseForwardedHeaders();
 
             app.UseRouting();
+            app.UseCors("AllowSpecificOrigin");
 
             app.UseAuthentication();
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

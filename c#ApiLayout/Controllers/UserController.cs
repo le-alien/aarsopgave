@@ -1,15 +1,13 @@
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using ShaNext.ShaNext;
-using System.Text.Json;
 
 
 namespace c_ApiLayout.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/UserController")]
     public class apiLayoutController : ControllerBase
     {
         private readonly IMongoCollection<BsonDocument> _UserCollection;
@@ -22,7 +20,7 @@ namespace c_ApiLayout.Controllers
             var userDatabase = client.GetDatabase("test");
             _UserCollection = userDatabase.GetCollection<BsonDocument>("users");
         }
-        
+
         [HttpPost("Register")]
         public async Task<IActionResult> Register([FromBody] UserDto userForm)
         {
@@ -31,7 +29,6 @@ namespace c_ApiLayout.Controllers
                 string Username = userForm.Username;
                 string Password = userForm.Password;
                 string HashPassword = ShaNextHashing.GenerateSaltedHash(Password);
-                bool Admin = userForm.Admin;
 
                 var filter = Builders<BsonDocument>.Filter.Eq("username", Username);
                 var document = await _UserCollection.Find(filter).FirstOrDefaultAsync();
@@ -45,7 +42,6 @@ namespace c_ApiLayout.Controllers
         {
             { "username", Username },
             { "password", HashPassword },
-            { "admin", Admin }
         };
                 await _UserCollection.InsertOneAsync(userEntry);
 
@@ -61,10 +57,10 @@ namespace c_ApiLayout.Controllers
         public async Task<IActionResult> LoginEndpoint([FromBody] LoginDto form)
         {
             try
-                {
+            {
 
-                
-            
+
+
                 string Username = form.Username;
                 string Password = form.Password;
 
@@ -102,11 +98,11 @@ namespace c_ApiLayout.Controllers
             try
             {
                 string Username = userForm.Username;
-                bool Admin = userForm.Admin;
 
                 var filter = Builders<BsonDocument>.Filter.Eq("username", Username);
                 var document = await _UserCollection.Find(filter).FirstOrDefaultAsync();
 
+                bool Admin = document["admin"].AsBoolean;
 
                 if (document == null)
                 {
