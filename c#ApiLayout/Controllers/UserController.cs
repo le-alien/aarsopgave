@@ -4,7 +4,7 @@ using MongoDB.Driver;
 using ShaNext.ShaNext;
 
 
-namespace c_ApiLayout.Controllers
+namespace User.Controller
 {
     [ApiController]
     [Route("api/UserController")]
@@ -35,7 +35,7 @@ namespace c_ApiLayout.Controllers
 
                 if (document != null)
                 {
-                    return Conflict("Username taken.");
+                    return Conflict(new { error = "Username taken." });
                 }
 
                 var userEntry = new BsonDocument
@@ -45,7 +45,7 @@ namespace c_ApiLayout.Controllers
         };
                 await _UserCollection.InsertOneAsync(userEntry);
 
-                return Ok("Registered");
+                return Ok(Username);
             }
             catch (Exception ex)
             {

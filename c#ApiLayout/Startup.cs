@@ -19,7 +19,7 @@ namespace c_ApiLayout
 
             services.AddCors(options =>
             {
-                options.AddPolicy("CorsPolicy",
+                options.AddPolicy("AllowSpecificOrigin",
                     builder =>
                     {
                         builder.WithOrigins("http://127.0.0.1:2024")
