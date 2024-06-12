@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Http.HttpResults;
+using c_ApiLayout.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using ShaNext.ShaNext;
-using System.Text.Json;
 
 
 namespace User.Controller
@@ -22,7 +22,7 @@ namespace User.Controller
             var userDatabase = client.GetDatabase("test");
             _UserCollection = userDatabase.GetCollection<BsonDocument>("users");
         }
-        
+
         [HttpPost("Register")]
         public async Task<IActionResult> Register([FromBody] UserDto userForm)
         {
@@ -50,11 +50,11 @@ namespace User.Controller
         };
                 await _UserCollection.InsertOneAsync(userEntry);
 
-                return Ok(Username);
+                return Ok(new { Username });
             }
             catch (Exception ex)
             {
-                return BadRequest($"An error occurred: {ex.Message}");
+                return BadRequest(new { error = $"An error occurred: {ex.Message}" });
             }
         }
 
@@ -62,33 +62,33 @@ namespace User.Controller
         public async Task<IActionResult> LoginEndpoint([FromBody] LoginDto form)
         {
             try
-                {
+            {
 
-                
-            
+
+
                 string Username = form.Username;
                 string Password = form.Password;
 
                 var filter = Builders<BsonDocument>.Filter.Eq("username", Username);
                 var document = await _UserCollection.Find(filter).FirstOrDefaultAsync();
-
+                bool Admin = document["admin"].AsBoolean;
                 if (document != null)
                 {
                     string HashPassord = document["password"].AsString;
                     bool compare = ShaNextCompare.VerifySaltedHash(Password, HashPassord);
                     if (compare)
                     {
-                        return Ok("suksess");
+                        return Ok(new { Username, Password, Admin });
                     }
                     else
                     {
-                        return BadRequest("Error");
+                        return BadRequest(new { message = "error" });
                     }
                 }
 
                 else
                 {
-                    return BadRequest("Error");
+                    return BadRequest(new { message = "Error" });
                 }
             }
             catch (Exception ex)
@@ -103,7 +103,7 @@ namespace User.Controller
             try
             {
                 string Username = userForm.Username;
-                bool Admin = true;
+                bool setAdminTrue = true;
 
                 var filter = Builders<BsonDocument>.Filter.Eq("username", Username);
                 var document = await _UserCollection.Find(filter).FirstOrDefaultAsync();
@@ -112,32 +112,53 @@ namespace User.Controller
 
                 if (document == null)
                 {
-                    return NotFound("User not found.");
+                    return NotFound(new { message = "User not found." });
                 }
                 bool useradmin = document["admin"].AsBoolean;
 
                 if (useradmin)
                 {
-                    return Ok("Bruker er admin");
+                    return Ok(new { message = "Bruker er admin" });
                 }
                 else
                 {
-                    return Ok("Bruker er ikke admin");
+                    return Ok(new { message = "Bruker er ikke admin" });
                 }
                 var update = Builders<BsonDocument>.Update
 
-                    .Set("admin", Admin);
+                    .Set("admin", setAdminTrue);
 
                 await _UserCollection.UpdateOneAsync(filter, update);
 
-                return Ok("Updated");
+                return Ok(new { message = "Updated" });
             }
             catch (Exception ex)
             {
-                return BadRequest($"An error occurred: {ex.Message}");
+                return BadRequest(new { message = $"An error occurred: {ex.Message}" });
             }
         }
 
 
+
+        [HttpGet("GetUser")]
+        public async Task<IActionResult> GetUser()
+        {
+            try
+            {
+                var filter = Builders<BsonDocument>.Filter.Empty;
+                var documents = await _UserCollection.Find(filter).ToListAsync();
+                var users = documents.Select(document => new
+                {
+                    Username = document["username"].AsString,
+                    Admin = document.Contains("admin") && document["admin"].IsBoolean ? document["admin"].AsBoolean : false
+                }).ToList();
+
+                return Ok(new { Users = users });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = $"An error occurred: {ex.Message}" });
+            }
+        }
     }
 }
