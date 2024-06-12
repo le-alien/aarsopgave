@@ -31,7 +31,7 @@ namespace User.Controller
                 string Username = userForm.Username;
                 string Password = userForm.Password;
                 string HashPassword = ShaNextHashing.GenerateSaltedHash(Password);
-                bool Admin = userForm.Admin;
+                bool Admin = false;
 
 
                 var filter = Builders<BsonDocument>.Filter.Eq("username", Username);
@@ -103,7 +103,7 @@ namespace User.Controller
             try
             {
                 string Username = userForm.Username;
-                bool Admin = userForm.Admin;
+                bool Admin = true;
 
                 var filter = Builders<BsonDocument>.Filter.Eq("username", Username);
                 var document = await _UserCollection.Find(filter).FirstOrDefaultAsync();
@@ -126,7 +126,7 @@ namespace User.Controller
                 }
                 var update = Builders<BsonDocument>.Update
 
-                    .Set("admin", !Admin);
+                    .Set("admin", Admin);
 
                 await _UserCollection.UpdateOneAsync(filter, update);
 
