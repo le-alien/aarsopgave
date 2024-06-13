@@ -97,46 +97,34 @@ namespace User.Controller
             }
         }
 
-        [HttpPost("Update")]
-        public async Task<IActionResult> Update([FromBody] UserDto userForm)
+[HttpPost("Update")]
+public async Task<IActionResult> Update([FromBody] UserDto userForm)
+{
+    try
+    {
+        string Username = userForm.Username;
+        bool setAdminTrue = userForm.Admin;
+
+        var filter = Builders<BsonDocument>.Filter.Eq("username", Username);
+        var document = await _UserCollection.Find(filter).FirstOrDefaultAsync();
+
+        if (document == null)
         {
-            try
-            {
-                string Username = userForm.Username;
-                bool setAdminTrue = true;
-
-                var filter = Builders<BsonDocument>.Filter.Eq("username", Username);
-                var document = await _UserCollection.Find(filter).FirstOrDefaultAsync();
-
-                bool Admin = document["admin"].AsBoolean;
-
-                if (document == null)
-                {
-                    return NotFound(new { message = "User not found." });
-                }
-                bool useradmin = document["admin"].AsBoolean;
-
-                if (useradmin)
-                {
-                    return Ok(new { message = "Bruker er admin" });
-                }
-                else
-                {
-                    return Ok(new { message = "Bruker er ikke admin" });
-                }
-                var update = Builders<BsonDocument>.Update
-
-                    .Set("admin", setAdminTrue);
-
-                await _UserCollection.UpdateOneAsync(filter, update);
-
-                return Ok(new { message = "Updated" });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = $"An error occurred: {ex.Message}" });
-            }
+            return NotFound(new { message = "User not found." });
         }
+
+        var update = Builders<BsonDocument>.Update.Set("admin", setAdminTrue);
+
+        await _UserCollection.UpdateOneAsync(filter, update);
+
+        return Ok(new { message = "Updated" });
+    }
+    catch (Exception ex)
+    {
+        return BadRequest(new { message = $"An error occurred: {ex.Message}" });
+    }
+}
+
 
 
 
